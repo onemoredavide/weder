@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: Deploy a React static website with S3 and CloudFront
+
+Parameters:
+  WebsiteBucketName:
+    Type: String
+    Description: Name of the S3 bucket to store the website content
+
+Resources:
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref WebsiteBucketName
+      WebsiteConfiguration:
+        IndexDocument: index.html
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - DomainName: !GetAtt WebsiteBucket.DomainName
+            Id: !Ref WebsiteBucketName
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultRootObject: index.html
+        Enabled: true
+        DefaultCacheBehavior:
+          TargetOriginId: !Ref WebsiteBucketName
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+        Aliases:
+          - test-spacelift-davide.sandbox.soluzionifutura.it
